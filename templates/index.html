@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section id="selected-image" data-filename="{{ selected_image }}">
+    <h2>Selected Image</h2>
+    {% if selected_image %}
+    <img src="{{ url_for('serve_image', filename=selected_image) }}">
+    {% endif %}
+    <button id="delete-image">Delete</button>
+</section>
+<section id="image-gallery">
+    {% for image in images %}
+    <div class="gallery-item" data-filename="{{ image }}">
+        <img src="{{ url_for('serve_image', filename=image) }}" alt="Gallery Image">
+    </div>
+    {% endfor %}
+</section>
+<div class="pagination">
+    {% if page > 1 %}
+    <a class="button" href="/?page={{ page - 1 }}">Previous</a>
+    {% endif %}
+    {% if page < total_pages %}
+    <a class="button" href="/?page={{ page + 1 }}">Next</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    const selectedImageSection = document.getElementById('selected-image');
+    const selectedImage = selectedImageSection.querySelector('img');
+
+    galleryItems.forEach(item => {
+        item.addEventListener('click', function() {
+            console.log('Gallery item clicked');
+            const newFilename = this.getAttribute('data-filename');
+            selectedImage.src = `/images/${newFilename}`;
+            selectedImageSection.setAttribute('data-filename', newFilename);
+        });
+    });
+
+    const deleteButton = document.getElementById('delete-image');
+    deleteButton.addEventListener('click', function() {
+        const filenameToDelete = selectedImageSection.getAttribute('data-filename');
+        fetch(`/delete/${filenameToDelete}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to delete image.');
+                }
+            });
+    });
+});
+</script>
+{% endblock %}
